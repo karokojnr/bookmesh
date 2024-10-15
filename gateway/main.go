@@ -18,7 +18,7 @@ var (
 
 func main() {
 	/// grpc client
-	conn, err := grpc.NewClient(orderServiceAddr, grpc.WithTransportCredentials((insecure.NewCredentials())))
+	conn, err := grpc.Dial(orderServiceAddr, grpc.WithTransportCredentials((insecure.NewCredentials())))
 	if err != nil {
 		log.Fatal("Failed to dial order service", err)
 	}
