@@ -60,7 +60,7 @@ func (h *httpHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 func validateBooks(books []*pb.BookWithQuantity) error {
 	if len(books) == 0 {
-		return errors.New("books must not be empty")
+		return shared.ErrNoBooks
 	}
 
 	for _, b := range books {

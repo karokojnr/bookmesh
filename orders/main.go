@@ -5,6 +5,7 @@ import (
 	"net"
 
 	shared "github.com/karokojnr/bookmesh-shared"
+
 	"google.golang.org/grpc"
 )
 
@@ -23,10 +24,10 @@ func main() {
 
 	store := NewStorage()
 	svc := NewService(store)
-	NewGrpcHandler(grpcServer)
+	NewGrpcHandler(grpcServer, svc)
 
 	log.Println("Starting grpc server on", grpcAddr)
-	svc.CreateOrder()
+	// svc.CreateOrder()
 
 	if err := grpcServer.Serve(conn); err != nil {
 		log.Fatalf(err.Error())
