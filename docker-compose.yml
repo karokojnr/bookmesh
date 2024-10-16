@@ -12,3 +12,9 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+
+  jaeger:
+    image: "jaegertracing/all-in-one:latest"
+    ports:
+      - "16686:16686"
+      - "4318:4318"
