@@ -7,6 +7,7 @@ import (
 	"time"
 
 	shared "github.com/karokojnr/bookmesh-shared"
+	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
 
@@ -17,6 +18,10 @@ var (
 	svcName    = "orders"
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
 	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:8081")
+	amqpUser   = shared.EnvString("RABBITMQ_USER", "guest")
+	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
+	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
+	amqpPort   = shared.EnvString("RABBITMQ_PORT", "5672")
 )
 
 func main() {
@@ -42,6 +47,13 @@ func main() {
 	defer registry.UnregisterService(ctx, instanceId, svcName)
 	///
 
+	/// Broker
+	ch, close := broker.Connect(amqpUser, amqpPass, amqpHost, amqpPort)
+	defer func() {
+		close()
+		ch.Close()
+	}()
+
 	grpcServer := grpc.NewServer()
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
@@ -51,11 +63,9 @@ func main() {
 
 	store := NewStorage()
 	svc := NewService(store)
-	NewGrpcHandler(grpcServer, svc)
+	NewGrpcHandler(grpcServer, svc, ch)
 
 	log.Println("Starting grpc server on", grpcAddr)
-	// svc.CreateOrder()
-
 	if err := grpcServer.Serve(conn); err != nil {
 		log.Fatalf(err.Error())
 	}
