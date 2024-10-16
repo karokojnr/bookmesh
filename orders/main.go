@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
 	tracer "github.com/karokojnr/bookmesh-shared/tracer"
+	"go.uber.org/zap"
 
 	"google.golang.org/grpc"
 )
@@ -27,9 +27,12 @@ var (
 )
 
 func main() {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
 	/// Tracer
 	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
-		log.Fatalf("Failed to set global tracer: %v", err)
+		logger.Fatal("Failed to set global tracer ", zap.Error(err))
 	}
 
 	/// Service Discovery Registry
@@ -41,13 +44,13 @@ func main() {
 	ctx := context.Background()
 	instanceId := discovery.GenerateInstanceID(svcName)
 	if err := registry.RegisterService(ctx, instanceId, svcName, grpcAddr); err != nil {
-		log.Fatalf("Failed to register service: %v", err)
+		logger.Fatal("Failed to register service ", zap.Error(err))
 	}
 
 	go func() {
 		for {
 			if err := registry.HealthCheck(instanceId, svcName); err != nil {
-				log.Fatalf("Health check failed: %v", err)
+				logger.Fatal("Health check failed ", zap.Error(err))
 			}
 			time.Sleep(5 * time.Second)
 		}
@@ -65,7 +68,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		logger.Fatal("Failed to listen ", zap.Error(err))
 	}
 	defer conn.Close()
 
@@ -74,15 +77,16 @@ func main() {
 
 	/// Use decorator pattern to add middleware to the service
 	svcWithTelemetryMiddleware := NewTelemetryMiddleware(svc)
-	NewGrpcHandler(grpcServer, svcWithTelemetryMiddleware, ch)
+	svcWithLoggingMiddleware := NewLoggingMiddleware(svcWithTelemetryMiddleware)
+	NewGrpcHandler(grpcServer, svcWithLoggingMiddleware, ch)
 
 	/// RabbitMQ consumer
-	amqpConsumer := NewConsumer(svcWithTelemetryMiddleware)
+	amqpConsumer := NewConsumer(svcWithLoggingMiddleware)
 	go amqpConsumer.Listen(ch)
 
-	log.Println("Starting grpc server on", grpcAddr)
+	logger.Info("Starting grpc server on", zap.String("address", grpcAddr))
 	if err := grpcServer.Serve(conn); err != nil {
-		log.Fatalf(err.Error())
+		logger.Fatal("Failed to start grpc server ", zap.Error(err))
 	}
 
 }
