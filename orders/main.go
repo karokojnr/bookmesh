@@ -30,6 +30,8 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
+	zap.ReplaceGlobals(logger)
+
 	/// Tracer
 	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
 		logger.Fatal("Failed to set global tracer ", zap.Error(err))
