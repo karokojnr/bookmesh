@@ -38,10 +38,10 @@ func Connect(user, pass, host, port string) (*amqp.Channel, func() error) {
 		log.Fatal(err)
 	}
 
-	// err = createDLQAndDLX(ch)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = createDLQAndDLX(ch)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return ch, conn.Close
 }

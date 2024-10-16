@@ -42,11 +42,6 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 		return nil, err
 	}
 
-	// o := &pb.Order{
-	// 	OrderId: "1",
-	// 	Books:   req.Books,
-	// }
-
 	mOrder, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
