@@ -16,6 +16,15 @@ func NewLoggingMiddleware(next OrdersService) OrdersService {
 	return &LoggingMiddleware{next}
 }
 
+func (s *LoggingMiddleware) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, items []*pb.Book) (*pb.Order, error) {
+	start := time.Now()
+	defer func() {
+		zap.L().Info("CreateOrder", zap.Duration("took", time.Since(start)))
+	}()
+
+	return s.next.CreateOrder(ctx, p, items)
+}
+
 func (s *LoggingMiddleware) GetOrder(ctx context.Context, p *pb.GetOrderRequest) (*pb.Order, error) {
 	start := time.Now()
 	defer func() {
@@ -32,15 +41,6 @@ func (s *LoggingMiddleware) UpdateOrder(ctx context.Context, o *pb.Order) (*pb.O
 	}()
 
 	return s.next.UpdateOrder(ctx, o)
-}
-
-func (s *LoggingMiddleware) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, items []*pb.Book) (*pb.Order, error) {
-	start := time.Now()
-	defer func() {
-		zap.L().Info("CreateOrder", zap.Duration("took", time.Since(start)))
-	}()
-
-	return s.next.CreateOrder(ctx, p, items)
 }
 
 func (s *LoggingMiddleware) ValidateOrder(ctx context.Context, p *pb.CreateOrderRequest) ([]*pb.Book, error) {
