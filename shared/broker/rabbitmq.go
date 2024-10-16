@@ -144,6 +144,8 @@ func createDLQAndDLX(ch *amqp.Channel) error {
 	return err
 }
 
+/// Headers to extract context from AMQP messages
+
 type AmqpHeaderCarrier map[string]interface{}
 
 func (a AmqpHeaderCarrier) Get(k string) string {

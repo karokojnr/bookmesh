@@ -18,7 +18,7 @@ var (
 	httpAddr   = shared.EnvString("HTTP_ADDR", ":8080")
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
 	svcName    = "gateway"
-	jaegerAddr = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
+	jaegerAddr = shared.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {

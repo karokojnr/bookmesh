@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	pb "github.com/karokojnr/bookmesh-shared/api"
 	"github.com/karokojnr/bookmesh-shared/broker"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel"
 )
 
 type consumer struct {
@@ -35,17 +37,16 @@ func (c *consumer) Listen(ch *amqp.Channel) {
 		log.Fatal(err)
 	}
 
-	var forever chan struct{}
+	var forever = make(chan struct{})
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received message: %s", d.Body)
 
-			// // Extract the headers
-			// ctx := broker.ExtractAMQPHeader(context.Background(), d.Headers)
+			/// Extract the headers from the message
+			ctx := broker.ExtractAMQPHeader(context.Background(), d.Headers)
 
-			// tr := otel.Tracer("amqp")
-			// _, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - consume - %s", q.Name))
+			tr := otel.Tracer("amqp")
+			_, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - consumer - %s", q.Name))
 
 			o := &pb.Order{}
 			if err := json.Unmarshal(d.Body, o); err != nil {
@@ -65,8 +66,8 @@ func (c *consumer) Listen(ch *amqp.Channel) {
 				continue
 			}
 
-			// messageSpan.AddEvent("order.updated")
-			// messageSpan.End()
+			messageSpan.AddEvent("order.updated")
+			messageSpan.End()
 
 			log.Println("Order has been updated from AMQP")
 			d.Ack(false)

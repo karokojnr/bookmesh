@@ -15,6 +15,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
+	"go.opentelemetry.io/otel"
 )
 
 type PaymentHandler struct {
@@ -76,12 +77,24 @@ func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Re
 				PaymentLink: "",
 			}
 
-			marshalledOrder, _ := json.Marshal(o)
+			marshalledOrder, err := json.Marshal(o)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 
-			h.amqpChannel.PublishWithContext(ctx, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
+			/// Trace
+			tr := otel.Tracer("amqp")
+			amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - produce - %s", broker.OrderPaidEvent))
+			defer messageSpan.End()
+
+			/// Inject headers for tracing (context propagation)
+			headers := broker.InjectAMQPHeaders(amqpContext)
+
+			h.amqpChannel.PublishWithContext(amqpContext, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
 				ContentType:  "application/json",
 				Body:         marshalledOrder,
 				DeliveryMode: amqp.Persistent,
+				Headers:      headers,
 			})
 
 			log.Println("Message published order.paid")

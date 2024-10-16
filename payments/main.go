@@ -31,7 +31,7 @@ var (
 	amqpPort             = shared.EnvString("RABBITMQ_PORT", "5672")
 	stripeKey            = shared.EnvString("STRIPE_KEY", "")
 	endpointStripeSecret = shared.EnvString("ENDPOINT_STRIPE_SECRET", "")
-	jaegerAddr           = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
+	jaegerAddr           = shared.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
@@ -78,10 +78,12 @@ func main() {
 	/// Gateway
 	gateway := gateway.NewGateway(registry)
 	///
+	/// Use decorator pattern to add middleware to the service
 
 	svc := NewService(stripeProcessor, gateway)
+	svcWithTelemetryMiddleware := NewTelemetryMiddleware(svc)
 
-	amqpConsumer := NewConsumer(svc)
+	amqpConsumer := NewConsumer(svcWithTelemetryMiddleware)
 	go amqpConsumer.Listen(ch)
 
 	/// Http server

@@ -23,7 +23,7 @@ var (
 	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
 	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
 	amqpPort   = shared.EnvString("RABBITMQ_PORT", "5672")
-	jaegerAddr = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
+	jaegerAddr = shared.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
