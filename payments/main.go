@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -20,12 +21,14 @@ import (
 var (
 	svcName    = "payments"
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
-	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:8082")
+	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:3000")
+	httpAddr   = shared.EnvString("HTTP_ADDR", "localhost:8081")
 	amqpUser   = shared.EnvString("RABBITMQ_USER", "guest")
 	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
 	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
 	amqpPort   = shared.EnvString("RABBITMQ_PORT", "5672")
 	stripeKey  = shared.EnvString("STRIPE_KEY", "")
+	endpointStripeSecret = shared.EnvString("ENDPOINT_STRIPE_SECRET", "")
 )
 
 func main() {
@@ -69,6 +72,18 @@ func main() {
 	amqpConsumer := NewConsumer(svc)
 	go amqpConsumer.Listen(ch)
 
+	/// Http server
+	mux := http.NewServeMux()
+	httpServer := NewHttpPaymentHandler(ch)
+	httpServer.registerRoutes(mux)
+	go func() {
+		log.Println("Starting http server on ", httpAddr)
+		if err := http.ListenAndServe(httpAddr, mux); err != nil {
+			log.Fatalf("Failed to start http server: %v", err)
+		}
+	}()
+
+	/// gRPC server
 	grpcServer := grpc.NewServer()
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

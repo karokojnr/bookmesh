@@ -17,7 +17,7 @@ import (
 var (
 	svcName    = "orders"
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
-	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:8081")
+	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:2000")
 	amqpUser   = shared.EnvString("RABBITMQ_USER", "guest")
 	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
 	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
