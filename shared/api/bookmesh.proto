@@ -7,6 +7,7 @@ package api;
 service OrderService {
     rpc CreateOrder(CreateOrderRequest) returns (Order);
     rpc GetOrder(GetOrderRequest) returns (Order);
+    rpc UpdateOrder(Order) returns (Order);
 }
 
 message CreateOrderRequest {
@@ -25,7 +26,7 @@ message Order {
     string customer_id = 2;
     string status = 3;
     repeated Book books = 4;
-
+    string payment_link = 5;
 }
 
 message Book {

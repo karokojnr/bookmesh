@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	pb "github.com/karokojnr/bookmesh-shared/api"
+	"github.com/karokojnr/bookmesh-shared/broker"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
@@ -46,8 +50,7 @@ func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if event.Type == stripe.EventTypeCheckoutSessionCompleted ||
-		event.Type == stripe.EventTypeCheckoutSessionAsyncPaymentSucceeded {
+	if event.Type == "checkout.session.completed" {
 
 		var cs stripe.CheckoutSession
 		err := json.Unmarshal(event.Data.Raw, &cs)
@@ -60,6 +63,28 @@ func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Re
 		if cs.PaymentStatus == "paid" {
 			log.Printf("Payment for Checkout Session %s succeeded!", cs.ID)
 			// publish message to RabbitMQ
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			orderId := cs.Metadata["orderId"]
+			customerId := cs.Metadata["customerId"]
+
+			o := &pb.Order{
+				OrderId:     orderId,
+				CustomerId:  customerId,
+				Status:      "paid",
+				PaymentLink: "",
+			}
+
+			marshalledOrder, _ := json.Marshal(o)
+
+			h.amqpChannel.PublishWithContext(ctx, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         marshalledOrder,
+				DeliveryMode: amqp.Persistent,
+			})
+
+			log.Println("Message published order.paid")
 		}
 
 	}

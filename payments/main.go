@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
+	"github.com/karokojnr/bookmesh-payments/gateway"
 	stripeprocessor "github.com/karokojnr/bookmesh-payments/payment_processor/stripe_processor"
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/broker"
@@ -19,15 +20,15 @@ import (
 )
 
 var (
-	svcName    = "payments"
-	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
-	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:3000")
-	httpAddr   = shared.EnvString("HTTP_ADDR", "localhost:8081")
-	amqpUser   = shared.EnvString("RABBITMQ_USER", "guest")
-	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
-	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
-	amqpPort   = shared.EnvString("RABBITMQ_PORT", "5672")
-	stripeKey  = shared.EnvString("STRIPE_KEY", "")
+	svcName              = "payments"
+	consulAddr           = shared.EnvString("CONSUL_ADDR", "localhost:8500")
+	grpcAddr             = shared.EnvString("GRPC_ADDR", "localhost:3000")
+	httpAddr             = shared.EnvString("HTTP_ADDR", "localhost:8081")
+	amqpUser             = shared.EnvString("RABBITMQ_USER", "guest")
+	amqpPass             = shared.EnvString("RABBITMQ_PASS", "guest")
+	amqpHost             = shared.EnvString("RABBITMQ_HOST", "localhost")
+	amqpPort             = shared.EnvString("RABBITMQ_PORT", "5672")
+	stripeKey            = shared.EnvString("STRIPE_KEY", "")
 	endpointStripeSecret = shared.EnvString("ENDPOINT_STRIPE_SECRET", "")
 )
 
@@ -57,7 +58,7 @@ func main() {
 
 	/// Stripe
 	stripe.Key = stripeKey
-	log.Println("Stripe key: ", stripeKey)
+	log.Println("endpointStripeSecret: ", endpointStripeSecret)
 	stripeProcessor := stripeprocessor.NewStripe()
 
 	/// Broker
@@ -67,7 +68,11 @@ func main() {
 		ch.Close()
 	}()
 
-	svc := NewService(stripeProcessor)
+	/// Gateway
+	gateway := gateway.NewGateway(registry)
+	///
+
+	svc := NewService(stripeProcessor, gateway)
 
 	amqpConsumer := NewConsumer(svc)
 	go amqpConsumer.Listen(ch)

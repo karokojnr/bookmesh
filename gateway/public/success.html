@@ -97,7 +97,7 @@
         <div class="ready-popup">
             <p>Your order is ready for pickup!</p>
 
-            <p style="margin:10px;color:brown">Order number <b>#<span id="orderID"></span></b></p>
+            <p style="margin:10px;color:brown">Order number <b>#<span id="orderId"></span></b></p>
 
             <button class="close-btn" onclick="document.querySelector('.ready-popup').style.display = 'none'">
                 Close
@@ -149,7 +149,7 @@
 
             // show ready popup
             document.querySelector('.ready-popup').style.display = 'block';
-            document.getElementById('orderID').innerText = orderID;
+            document.getElementById('orderId').innerText = orderId;
             document.getElementById('orderStatus').innerText = order.Status;
         } else {
             setTimeout(poolOrderStatus, 5000);

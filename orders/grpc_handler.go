@@ -71,3 +71,7 @@ func (h *grpcHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*p
 	return h.svc.GetOrder(ctx, req)
 
 }
+
+func (h *grpcHandler) UpdateOrder(ctx context.Context, p *pb.Order) (*pb.Order, error) {
+	return h.svc.UpdateOrder(ctx, p)
+}

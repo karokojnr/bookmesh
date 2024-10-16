@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/karokojnr/bookmesh-gateway/gateway"
@@ -60,8 +61,12 @@ func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 		shared.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	res := &CreateOrderRequest{
+		Order:         o,
+		RedirectToURL: fmt.Sprintf("http://localhost:8080/success.html?customerId=%s&orderId=%s", o.CustomerId, o.OrderId),
+	}
 
-	shared.WriteJSON(w, http.StatusCreated, o)
+	shared.WriteJSON(w, http.StatusCreated, res)
 }
 
 func (h *httpHandler) getOrder(w http.ResponseWriter, r *http.Request) {
