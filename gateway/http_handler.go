@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/karokojnr/bookmesh-gateway/gateway"
 	shared "github.com/karokojnr/bookmesh-shared"
 	pb "github.com/karokojnr/bookmesh-shared/api"
 	"google.golang.org/grpc/codes"
@@ -11,11 +12,11 @@ import (
 )
 
 type httpHandler struct {
-	client pb.OrderServiceClient
+	gateway gateway.OrdersGateway
 }
 
-func NewHttpHandler(c pb.OrderServiceClient) *httpHandler {
-	return &httpHandler{client: c}
+func NewHttpHandler(gateway gateway.OrdersGateway) *httpHandler {
+	return &httpHandler{gateway}
 }
 
 func (h *httpHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -37,7 +38,7 @@ func (h *httpHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o, err := h.client.CreateOrder(r.Context(), &pb.CreateOrderRequest{
+	o, err := h.gateway.CreateOrder(r.Context(), &pb.CreateOrderRequest{
 		CustomerId: customerId,
 		Books:      books,
 	})

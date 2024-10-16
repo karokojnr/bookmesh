@@ -12,7 +12,7 @@ type DiscoveryRegistry interface {
 	RegisterService(ctx context.Context, instanceId, serverName, hostPort string) error
 	UnregisterService(ctx context.Context, instanceId, serviceName string) error
 	DiscoverService(ctx context.Context, serviceName string) ([]string, error)
-	HealthCheck(ctx context.Context, serviceName string) error
+	HealthCheck(instanceId, serviceName string) error
 }
 
 func GenerateInstanceID(serviceName string) string {

@@ -71,6 +71,6 @@ func (r ConsulDiscoveryRegistry) DiscoverService(ctx context.Context, serviceNam
 	return instances, nil
 }
 
-func (r ConsulDiscoveryRegistry) HealthCheck(instanceID string, serviceName string) error {
-	return r.client.Agent().UpdateTTL(instanceID, "online", consul.HealthPassing)
+func (r ConsulDiscoveryRegistry) HealthCheck(instanceId string, serviceName string) error {
+	return r.client.Agent().UpdateTTL(instanceId, "online", consul.HealthPassing)
 }
