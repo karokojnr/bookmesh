@@ -8,6 +8,8 @@ import (
 	"github.com/karokojnr/bookmesh-gateway/gateway"
 	shared "github.com/karokojnr/bookmesh-shared"
 	pb "github.com/karokojnr/bookmesh-shared/api"
+	"go.opentelemetry.io/otel"
+	otelCodes "go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,12 +41,17 @@ func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trace
+	tr := otel.Tracer("http")
+	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
+	defer span.End()
+
 	if err := validateBooks(books); err != nil {
 		shared.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	o, err := h.gateway.CreateOrder(r.Context(), &pb.CreateOrderRequest{
+	o, err := h.gateway.CreateOrder(ctx, &pb.CreateOrderRequest{
 		CustomerId: customerId,
 		Books:      books,
 	})
@@ -53,6 +60,7 @@ func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 	errStatus := status.Convert(err)
 
 	if errStatus != nil {
+		span.SetStatus(otelCodes.Error, err.Error())
 		if errStatus.Code() == codes.InvalidArgument {
 			shared.WriteError(w, http.StatusBadRequest, errStatus.Message())
 			return
@@ -73,12 +81,19 @@ func (h *httpHandler) getOrder(w http.ResponseWriter, r *http.Request) {
 	customerId := r.PathValue("customerId")
 	orderId := r.PathValue("orderId")
 
-	o, err := h.gateway.GetOrder(r.Context(), orderId, customerId)
+	// Trace
+	tr := otel.Tracer("http")
+	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
+	defer span.End()
+
+	o, err := h.gateway.GetOrder(ctx, orderId, customerId)
 
 	/// grpc error handling
 	errStatus := status.Convert(err)
 
 	if errStatus != nil {
+		span.SetStatus(otelCodes.Error, err.Error())
+
 		if errStatus.Code() != codes.InvalidArgument {
 			shared.WriteError(w, http.StatusBadRequest, errStatus.Message())
 			return

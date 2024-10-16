@@ -11,15 +11,23 @@ import (
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
+	tracer "github.com/karokojnr/bookmesh-shared/tracer"
 )
 
 var (
 	httpAddr   = shared.EnvString("HTTP_ADDR", ":8080")
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
 	svcName    = "gateway"
+	jaegerAddr = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
 )
 
 func main() {
+	/// Tracer
+	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
+		log.Fatalf("Failed to set global tracer: %v", err)
+	}
+
+	/// Register consul
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {
 		panic(err)

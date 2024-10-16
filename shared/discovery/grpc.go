@@ -23,7 +23,7 @@ func ServiceConnection(ctx context.Context, serviceName string, registry Discove
 		addrs[rand.Intn(len(addrs))],
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		/// Add OpenTelemetry interceptors
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()), // jaeger
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()), // jaeger
 	)
 }

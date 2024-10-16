@@ -15,6 +15,7 @@ import (
 	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
+	tracer "github.com/karokojnr/bookmesh-shared/tracer"
 	"github.com/stripe/stripe-go/v78"
 	"google.golang.org/grpc"
 )
@@ -30,9 +31,15 @@ var (
 	amqpPort             = shared.EnvString("RABBITMQ_PORT", "5672")
 	stripeKey            = shared.EnvString("STRIPE_KEY", "")
 	endpointStripeSecret = shared.EnvString("ENDPOINT_STRIPE_SECRET", "")
+	jaegerAddr           = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
 )
 
 func main() {
+	/// Tracer
+	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
+		log.Fatalf("Failed to set global tracer: %v", err)
+	}
+
 	/// Register consul
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {

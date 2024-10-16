@@ -10,6 +10,7 @@ import (
 	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
+	tracer "github.com/karokojnr/bookmesh-shared/tracer"
 
 	"google.golang.org/grpc"
 )
@@ -22,9 +23,16 @@ var (
 	amqpPass   = shared.EnvString("RABBITMQ_PASS", "guest")
 	amqpHost   = shared.EnvString("RABBITMQ_HOST", "localhost")
 	amqpPort   = shared.EnvString("RABBITMQ_PORT", "5672")
+	jaegerAddr = shared.EnvString("JAEGER_ADDR", "http://localhost:4318")
 )
 
 func main() {
+	/// Tracer
+	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
+		log.Fatalf("Failed to set global tracer: %v", err)
+	}
+
+	/// Service Discovery Registry
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {
 		panic(err)
@@ -63,7 +71,14 @@ func main() {
 
 	store := NewStorage()
 	svc := NewService(store)
-	NewGrpcHandler(grpcServer, svc, ch)
+
+	/// Use decorator pattern to add middleware to the service
+	svcWithTelemetryMiddleware := NewTelemetryMiddleware(svc)
+	NewGrpcHandler(grpcServer, svcWithTelemetryMiddleware, ch)
+
+	/// RabbitMQ consumer
+	amqpConsumer := NewConsumer(svcWithTelemetryMiddleware)
+	go amqpConsumer.Listen(ch)
 
 	log.Println("Starting grpc server on", grpcAddr)
 	if err := grpcServer.Serve(conn); err != nil {
