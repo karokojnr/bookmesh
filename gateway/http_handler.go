@@ -20,10 +20,15 @@ func NewHttpHandler(gateway gateway.OrdersGateway) *httpHandler {
 }
 
 func (h *httpHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /api/customers/{customerId}/orders", h.CreateOrder)
+	/// static file server
+	mux.Handle("/", http.FileServer(http.Dir("public")))
+
+	mux.HandleFunc("POST /api/customers/{customerId}/orders", h.createOrder)
+	mux.HandleFunc("GET /api/customers/{customerId}/orders/{orderId}", h.getOrder)
+
 }
 
-func (h *httpHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 	customerId := r.PathValue("customerId")
 
 	var books []*pb.BookWithQuantity
@@ -57,6 +62,29 @@ func (h *httpHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shared.WriteJSON(w, http.StatusCreated, o)
+}
+
+func (h *httpHandler) getOrder(w http.ResponseWriter, r *http.Request) {
+	customerId := r.PathValue("customerId")
+	orderId := r.PathValue("orderId")
+
+	o, err := h.gateway.GetOrder(r.Context(), orderId, customerId)
+
+	/// grpc error handling
+	errStatus := status.Convert(err)
+
+	if errStatus != nil {
+		if errStatus.Code() != codes.InvalidArgument {
+			shared.WriteError(w, http.StatusBadRequest, errStatus.Message())
+			return
+		}
+
+		shared.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	shared.WriteJSON(w, http.StatusOK, o)
+
 }
 
 func validateBooks(books []*pb.BookWithQuantity) error {

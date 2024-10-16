@@ -16,20 +16,25 @@ func NewService(store OrdersStore) *service {
 	return &service{store: store}
 }
 
-func (s *service) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest) (*pb.Order, error) {
-	books, err := s.ValidateOrder(ctx, p)
+func (s *service) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, books []*pb.Book) (*pb.Order, error) {
+	
+
+	id, err := s.store.Create(ctx, p, books)
 	if err != nil {
 		return nil, err
 	}
-
 	o := &pb.Order{
-		OrderId:    "order_1",
-		Books:      books,
+		OrderId:    id,
 		CustomerId: p.CustomerId,
-		Status:     "pending",
+		Books:      books,
 	}
+
 	return o, nil
 
+}
+
+func (s *service) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Order, error) {
+	return s.store.Get(ctx, req.OrderId, req.CustomerId)
 }
 
 func (s *service) ValidateOrder(ctx context.Context, req *pb.CreateOrderRequest) ([]*pb.Book, error) {

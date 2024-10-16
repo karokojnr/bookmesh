@@ -32,7 +32,15 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 
 	log.Printf("Creating order for customer %v", req)
 
-	o, err := h.svc.CreateOrder(ctx, req)
+	books, err := h.svc.ValidateOrder(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := h.svc.CreateOrder(ctx, req, books)
+	if err != nil {
+		return nil, err
+	}
 
 	// o := &pb.Order{
 	// 	OrderId: "1",
@@ -56,4 +64,10 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 	})
 
 	return o, nil
+}
+
+func (h *grpcHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Order, error) {
+	log.Printf("Getting order for customer %v", req)
+	return h.svc.GetOrder(ctx, req)
+
 }

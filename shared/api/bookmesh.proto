@@ -6,6 +6,7 @@ package api;
 
 service OrderService {
     rpc CreateOrder(CreateOrderRequest) returns (Order);
+    rpc GetOrder(GetOrderRequest) returns (Order);
 }
 
 message CreateOrderRequest {
@@ -34,4 +35,9 @@ message Book {
     string price_id = 4;
     int32 quantity = 5;
     
+}
+
+message GetOrderRequest {
+    string order_id = 1;
+    string customer_id = 2;
 }
