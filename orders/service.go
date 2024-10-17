@@ -2,18 +2,22 @@ package main
 
 import (
 	"context"
-	"log"
 
+	"github.com/karokojnr/bookmesh-orders/gateway"
 	shared "github.com/karokojnr/bookmesh-shared"
 	pb "github.com/karokojnr/bookmesh-shared/api"
 )
 
 type service struct {
-	store OrdersStore
+	store   OrdersStore
+	gateway gateway.CatalogGateway
 }
 
-func NewService(store OrdersStore) *service {
-	return &service{store: store}
+func NewService(store OrdersStore, gateway gateway.CatalogGateway) *service {
+	return &service{
+		store:   store,
+		gateway: gateway,
+	}
 }
 
 func (s *service) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, books []*pb.Book) (*pb.Order, error) {
@@ -50,20 +54,18 @@ func (s *service) ValidateOrder(ctx context.Context, req *pb.CreateOrderRequest)
 	}
 
 	mergedBooks := mergeBooksQuantities(req.Books)
-	log.Println("Merged books:", mergedBooks)
 
-	/// validate with the catalog service
+	///  validate with the catalog service
+	isInCatalog, books, err := s.gateway.CheckIfBookIsInCatalog(ctx, req.CustomerId, mergedBooks)
 
-	/// Temprorary
-	var booksWithPrices []*pb.Book
-	for _, b := range mergedBooks {
-		booksWithPrices = append(booksWithPrices, &pb.Book{
-			BookId:   b.BookId,
-			PriceId:  "price_1QAUrkHHAM3KUbolwwfAqEjh",
-			Quantity: b.Quantity,
-		})
+	if err != nil {
+		return nil, err
 	}
-	return booksWithPrices, nil
+	if !isInCatalog {
+		return books, shared.ErrNoCatalog
+	}
+
+	return books, nil
 }
 
 func mergeBooksQuantities(books []*pb.BookWithQuantity) []*pb.BookWithQuantity {

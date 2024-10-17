@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/karokojnr/bookmesh-orders/gateway"
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
@@ -74,8 +75,11 @@ func main() {
 	}
 	defer conn.Close()
 
+	/// Gateway
+	gateway := gateway.NewGateway(registry)
+
 	store := NewStorage()
-	svc := NewService(store)
+	svc := NewService(store, gateway)
 
 	/// Use decorator pattern to add middleware to the service
 	svcWithTelemetryMiddleware := NewTelemetryMiddleware(svc)
