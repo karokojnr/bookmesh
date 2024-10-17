@@ -19,7 +19,7 @@ func NewStore() *Store {
 				Title:    "The Alchemist",
 				Authors:  []string{"Paulo Coelho"},
 				PriceId:  "price_1QAnwNHHAM3KUbolVHLhtu87",
-				Quantity: 2,
+				Quantity: 4,
 			},
 			"2": {
 				BookId:   "2",
