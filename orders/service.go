@@ -22,13 +22,20 @@ func NewService(store OrdersStore, gateway gateway.CatalogGateway) *service {
 
 func (s *service) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, books []*pb.Book) (*pb.Order, error) {
 
-	id, err := s.store.Create(ctx, p, books)
+	id, err := s.store.Create(ctx, Order{
+		CustomerId:  p.CustomerId,
+		Status:      "pending",
+		Books:       books,
+		PaymentLink: "",
+	})
 	if err != nil {
 		return nil, err
 	}
+
 	o := &pb.Order{
-		OrderId:    id,
+		OrderId:    id.Hex(),
 		CustomerId: p.CustomerId,
+		Status:     "pending",
 		Books:      books,
 	}
 
@@ -37,7 +44,12 @@ func (s *service) CreateOrder(ctx context.Context, p *pb.CreateOrderRequest, boo
 }
 
 func (s *service) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Order, error) {
-	return s.store.Get(ctx, req.OrderId, req.CustomerId)
+	o, err := s.store.Get(ctx, req.OrderId, req.CustomerId)
+	if err != nil {
+		return nil, err
+	}
+
+	return o.ToProto(), nil
 }
 
 func (s *service) UpdateOrder(ctx context.Context, o *pb.Order) (*pb.Order, error) {
