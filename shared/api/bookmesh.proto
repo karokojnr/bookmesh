@@ -42,3 +42,25 @@ message GetOrderRequest {
     string order_id = 1;
     string customer_id = 2;
 }
+
+service CatalogService {
+    rpc CheckIfBookIsInCatalog(CheckIfBookIsInCatalogRequest) returns (CheckIfBookIsInCatalogResponse);
+    rpc GetBooks(GetBooksRequest) returns (GetBooksResponse);
+}
+
+message CheckIfBookIsInCatalogRequest {
+    repeated BookWithQuantity books = 1;
+}
+
+message CheckIfBookIsInCatalogResponse {
+    bool is_in_catalog = 1;
+    repeated Book books = 2;
+}
+
+message GetBooksRequest {
+    repeated string book_ids = 1;
+}
+
+message GetBooksResponse {
+    repeated Book books = 1;
+}

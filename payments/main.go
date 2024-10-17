@@ -23,7 +23,7 @@ import (
 var (
 	svcName              = "payments"
 	consulAddr           = shared.EnvString("CONSUL_ADDR", "localhost:8500")
-	grpcAddr             = shared.EnvString("GRPC_ADDR", "localhost:3000")
+	grpcAddr             = shared.EnvString("GRPC_ADDR", "localhost:2001")
 	httpAddr             = shared.EnvString("HTTP_ADDR", "localhost:8081")
 	amqpUser             = shared.EnvString("RABBITMQ_USER", "guest")
 	amqpPass             = shared.EnvString("RABBITMQ_PASS", "guest")

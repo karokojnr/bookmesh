@@ -175,3 +175,125 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "api/bookmesh.proto",
 }
+
+// CatalogServiceClient is the client API for CatalogService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type CatalogServiceClient interface {
+	CheckIfBookIsInCatalog(ctx context.Context, in *CheckIfBookIsInCatalogRequest, opts ...grpc.CallOption) (*CheckIfBookIsInCatalogResponse, error)
+	GetBooks(ctx context.Context, in *GetBooksRequest, opts ...grpc.CallOption) (*GetBooksResponse, error)
+}
+
+type catalogServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCatalogServiceClient(cc grpc.ClientConnInterface) CatalogServiceClient {
+	return &catalogServiceClient{cc}
+}
+
+func (c *catalogServiceClient) CheckIfBookIsInCatalog(ctx context.Context, in *CheckIfBookIsInCatalogRequest, opts ...grpc.CallOption) (*CheckIfBookIsInCatalogResponse, error) {
+	out := new(CheckIfBookIsInCatalogResponse)
+	err := c.cc.Invoke(ctx, "/api.CatalogService/CheckIfBookIsInCatalog", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetBooks(ctx context.Context, in *GetBooksRequest, opts ...grpc.CallOption) (*GetBooksResponse, error) {
+	out := new(GetBooksResponse)
+	err := c.cc.Invoke(ctx, "/api.CatalogService/GetBooks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CatalogServiceServer is the server API for CatalogService service.
+// All implementations must embed UnimplementedCatalogServiceServer
+// for forward compatibility
+type CatalogServiceServer interface {
+	CheckIfBookIsInCatalog(context.Context, *CheckIfBookIsInCatalogRequest) (*CheckIfBookIsInCatalogResponse, error)
+	GetBooks(context.Context, *GetBooksRequest) (*GetBooksResponse, error)
+	mustEmbedUnimplementedCatalogServiceServer()
+}
+
+// UnimplementedCatalogServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedCatalogServiceServer struct {
+}
+
+func (UnimplementedCatalogServiceServer) CheckIfBookIsInCatalog(context.Context, *CheckIfBookIsInCatalogRequest) (*CheckIfBookIsInCatalogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckIfBookIsInCatalog not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetBooks(context.Context, *GetBooksRequest) (*GetBooksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBooks not implemented")
+}
+func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
+
+// UnsafeCatalogServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CatalogServiceServer will
+// result in compilation errors.
+type UnsafeCatalogServiceServer interface {
+	mustEmbedUnimplementedCatalogServiceServer()
+}
+
+func RegisterCatalogServiceServer(s grpc.ServiceRegistrar, srv CatalogServiceServer) {
+	s.RegisterService(&CatalogService_ServiceDesc, srv)
+}
+
+func _CatalogService_CheckIfBookIsInCatalog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckIfBookIsInCatalogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).CheckIfBookIsInCatalog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.CatalogService/CheckIfBookIsInCatalog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).CheckIfBookIsInCatalog(ctx, req.(*CheckIfBookIsInCatalogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetBooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBooksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetBooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.CatalogService/GetBooks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetBooks(ctx, req.(*GetBooksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var CatalogService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.CatalogService",
+	HandlerType: (*CatalogServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CheckIfBookIsInCatalog",
+			Handler:    _CatalogService_CheckIfBookIsInCatalog_Handler,
+		},
+		{
+			MethodName: "GetBooks",
+			Handler:    _CatalogService_GetBooks_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/bookmesh.proto",
+}
