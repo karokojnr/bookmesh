@@ -45,7 +45,7 @@ func (c *Consumer) Listen(ch *amqp.Channel) {
 		log.Fatal(err)
 	}
 
-	var forever chan struct{}
+	forever := make(chan struct{})
 
 	go func() {
 		for d := range msgs {
