@@ -7,7 +7,8 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/karokojnr/bookmesh-gateway/gateway"
+	"github.com/karokojnr/bookmesh-gateway/internal/gateway"
+	transport "github.com/karokojnr/bookmesh-gateway/internal/transport/http"
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/discovery"
 	"github.com/karokojnr/bookmesh-shared/discovery/consul"
@@ -53,7 +54,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	ordersGateway := gateway.NewGrpcGateway(registry)
-	h := NewHttpHandler(ordersGateway)
+	h := transport.NewHttpHandler(ordersGateway)
 	h.RegisterRoutes(mux)
 
 	log.Println("Starting http server on", httpAddr)
