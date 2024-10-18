@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	pb "github.com/karokojnr/bookmesh-shared/api"
 	"github.com/karokojnr/bookmesh-shared/discovery"
+	pb "github.com/karokojnr/bookmesh-shared/proto"
 )
 
 type gateway struct {

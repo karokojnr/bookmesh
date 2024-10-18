@@ -6,7 +6,12 @@ import (
 	"net"
 	"time"
 
-	"github.com/karokojnr/bookmesh-orders/gateway"
+	"github.com/karokojnr/bookmesh-orders/internal/catalog_gateway"
+	"github.com/karokojnr/bookmesh-orders/internal/consumer"
+	"github.com/karokojnr/bookmesh-orders/internal/service"
+	"github.com/karokojnr/bookmesh-orders/internal/store"
+	transport "github.com/karokojnr/bookmesh-orders/internal/transport/grpc"
+	"github.com/karokojnr/bookmesh-orders/internal/transport/middlewares"
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
@@ -30,7 +35,7 @@ var (
 	amqpPort    = shared.EnvString("RABBITMQ_PORT", "5672")
 	jaegerAddr  = shared.EnvString("JAEGER_ADDR", "localhost:4318")
 	mongoDbUser = shared.EnvString("MONGO_DB_USER", "root")
-	mongoDbPass = shared.EnvString("MONGO_DB_PASS", "example")
+	mongoDbPass = shared.EnvString("MONGO_DB_PASS", "changeme")
 	mongoDbAddr = shared.EnvString("MONGO_DB_HOST", "localhost:27017")
 )
 
@@ -91,18 +96,18 @@ func main() {
 	defer conn.Close()
 
 	/// Gateway
-	gateway := gateway.NewGateway(registry)
+	gateway := catalog_gateway.NewGateway(registry)
 
-	store := NewStorage(mongoClient)
-	svc := NewService(store, gateway)
+	store := store.NewStorage(mongoClient)
+	svc := service.NewService(store, gateway)
 
 	/// Use decorator pattern to add middleware to the service
-	svcWithTelemetryMiddleware := NewTelemetryMiddleware(svc)
-	svcWithLoggingMiddleware := NewLoggingMiddleware(svcWithTelemetryMiddleware)
-	NewGrpcHandler(grpcServer, svcWithLoggingMiddleware, ch)
+	svcWithTelemetryMiddleware := middlewares.NewTelemetryMiddleware(svc)
+	svcWithLoggingMiddleware := middlewares.NewLoggingMiddleware(svcWithTelemetryMiddleware)
+	transport.NewGrpcHandler(grpcServer, svcWithLoggingMiddleware, ch)
 
 	/// RabbitMQ consumer
-	amqpConsumer := NewConsumer(svcWithLoggingMiddleware)
+	amqpConsumer := consumer.NewConsumer(svcWithLoggingMiddleware)
 	go amqpConsumer.Listen(ch)
 
 	logger.Info("Starting grpc server on", zap.String("address", grpcAddr))

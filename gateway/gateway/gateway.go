@@ -3,7 +3,7 @@ package gateway
 import (
 	"context"
 
-	pb "github.com/karokojnr/bookmesh-shared/api"
+	pb "github.com/karokojnr/bookmesh-shared/proto"
 )
 
 type OrdersGateway interface {

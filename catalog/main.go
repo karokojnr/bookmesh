@@ -6,6 +6,11 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/karokojnr/bookmesh-catalog/internal/consumer"
+	"github.com/karokojnr/bookmesh-catalog/internal/service"
+	"github.com/karokojnr/bookmesh-catalog/internal/store"
+	transport "github.com/karokojnr/bookmesh-catalog/internal/transport/grpc"
+	middleware "github.com/karokojnr/bookmesh-catalog/internal/transport/middlewares"
 	shared "github.com/karokojnr/bookmesh-shared"
 	"github.com/karokojnr/bookmesh-shared/broker"
 	"github.com/karokojnr/bookmesh-shared/discovery"
@@ -28,6 +33,7 @@ var (
 )
 
 func main() {
+	/// Logging
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
@@ -73,13 +79,13 @@ func main() {
 	}
 	defer l.Close()
 
-	store := NewStore()
-	svc := NewService(store)
-	svcWithTelemetry := NewTelemetryMiddleware(svc)
+	store := store.NewStore()
+	svc := service.NewService(store)
+	svcWithTelemetry := middleware.NewTelemetryMiddleware(svc)
 
-	NewCatalogGrpcHandler(grpcServer, ch, svcWithTelemetry)
+	transport.NewCatalogGrpcHandler(grpcServer, ch, svcWithTelemetry)
 
-	consumer := NewConsumer()
+	consumer := consumer.NewConsumer()
 	go consumer.Listen(ch)
 
 	logger.Info("Starting gRPC server", zap.String("port", grpcAddr))

@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	pb "github.com/karokojnr/bookmesh-shared/api"
 	"github.com/karokojnr/bookmesh-shared/discovery"
+	pb "github.com/karokojnr/bookmesh-shared/proto"
 )
 
 type gateway struct {
@@ -26,7 +26,7 @@ func (g *gateway) UpdateOrderWithPaymentLink(ctx context.Context, orderId, link 
 	ordersClient := pb.NewOrderServiceClient(conn)
 
 	_, err = ordersClient.UpdateOrder(ctx, &pb.Order{
-		OrderId:          orderId,
+		OrderId:     orderId,
 		Status:      "waiting_payment",
 		PaymentLink: link,
 	})

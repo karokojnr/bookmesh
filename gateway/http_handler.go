@@ -7,7 +7,7 @@ import (
 
 	"github.com/karokojnr/bookmesh-gateway/gateway"
 	shared "github.com/karokojnr/bookmesh-shared"
-	pb "github.com/karokojnr/bookmesh-shared/api"
+	pb "github.com/karokojnr/bookmesh-shared/proto"
 	"go.opentelemetry.io/otel"
 	otelCodes "go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc/codes"

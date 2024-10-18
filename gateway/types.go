@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "github.com/karokojnr/bookmesh-shared/api"
+	pb "github.com/karokojnr/bookmesh-shared/proto"
 )
 
 type CreateOrderRequest struct {
