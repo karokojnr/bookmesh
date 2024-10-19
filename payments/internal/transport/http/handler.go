@@ -32,7 +32,7 @@ func NewHttpPaymentHandler(amqpChannel *amqp.Channel) *PaymentHandler {
 }
 
 func (h *PaymentHandler) RegisterRoutes(r *http.ServeMux) {
-	r.HandleFunc("POST/webhook", h.handleCheckoutWebhook)
+	r.HandleFunc("/webhook", h.handleCheckoutWebhook)
 }
 
 func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Request) {
@@ -48,16 +48,20 @@ func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Re
 
 	fmt.Fprintf(os.Stdout, "Received webhook: %s\n", body)
 
-	event, err := webhook.ConstructEvent(body, r.Header.Get("Stripe-Signature"), endpointStripeSecret)
+	event, err := webhook.ConstructEventWithOptions(body, r.Header.Get("Stripe-Signature"), endpointStripeSecret, webhook.ConstructEventOptions{
+		IgnoreAPIVersionMismatch: true,
+	},
+	)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error verifying webhook signature: %v\n", err)
-		w.WriteHeader(http.StatusBadRequest) // Return a 400 error on a bad signature
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if event.Type == "checkout.session.completed" {
-
+		// if event.Type == stripe.EventTypeCheckoutSessionCompleted ||
+		// 	event.Type == stripe.EventTypeCheckoutSessionAsyncPaymentSucceeded {
 		var cs stripe.CheckoutSession
 		err := json.Unmarshal(event.Data.Raw, &cs)
 		if err != nil {
@@ -87,12 +91,12 @@ func (h *PaymentHandler) handleCheckoutWebhook(w http.ResponseWriter, r *http.Re
 				log.Fatal(err.Error())
 			}
 
-			/// Trace
+			// Trace
 			tr := otel.Tracer("amqp")
 			amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - produce - %s", broker.OrderPaidEvent))
 			defer messageSpan.End()
 
-			/// Inject headers for tracing (context propagation)
+			// Inject headers for tracing (context propagation)
 			headers := broker.InjectAMQPHeaders(amqpContext)
 
 			h.amqpChannel.PublishWithContext(amqpContext, broker.OrderPaidEvent, "", false, false, amqp.Publishing{

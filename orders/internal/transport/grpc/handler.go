@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
+	"github.com/karokojnr/bookmesh-orders/internal/types"
 	"github.com/karokojnr/bookmesh-shared/broker"
 	pb "github.com/karokojnr/bookmesh-shared/proto"
 	"go.opentelemetry.io/otel"
@@ -14,20 +14,13 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type OrdersService interface {
-	CreateOrder(context.Context, *pb.CreateOrderRequest, []*pb.Book) (*pb.Order, error)
-	GetOrder(context.Context, *pb.GetOrderRequest) (*pb.Order, error)
-	UpdateOrder(context.Context, *pb.Order) (*pb.Order, error)
-	ValidateOrder(context.Context, *pb.CreateOrderRequest) ([]*pb.Book, error)
-}
-
 type grpcHandler struct {
 	pb.UnimplementedOrderServiceServer
-	svc         OrdersService
+	svc         types.OrdersService
 	amqpChannel *amqp.Channel
 }
 
-func NewGrpcHandler(grpcServer *grpc.Server, svc OrdersService, amqpChannel *amqp.Channel) {
+func NewGrpcHandler(grpcServer *grpc.Server, svc types.OrdersService, amqpChannel *amqp.Channel) {
 	handler := &grpcHandler{
 		svc:         svc,
 		amqpChannel: amqpChannel,
@@ -36,8 +29,8 @@ func NewGrpcHandler(grpcServer *grpc.Server, svc OrdersService, amqpChannel *amq
 }
 
 func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.Order, error) {
-	/// show gRPC error handling
-	/// return nil, fmt.Errorf("not implemented")
+	// show gRPC error handling
+	// return nil, fmt.Errorf("not implemented")
 
 	q, err := h.amqpChannel.QueueDeclare(broker.OrderCreatedEvent, true, false, false, false, nil)
 	if err != nil {
@@ -62,7 +55,7 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 		return nil, err
 	}
 
-	/// Inject headers for tracing (context propagation)
+	// Inject headers for tracing (context propagation)
 	headers := broker.InjectAMQPHeaders(amqpContext)
 
 	h.amqpChannel.PublishWithContext(amqpContext, "", q.Name, false, false, amqp.Publishing{
@@ -76,7 +69,6 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReques
 }
 
 func (h *grpcHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Order, error) {
-	log.Printf("Getting order for customer %v", req)
 	return h.svc.GetOrder(ctx, req)
 
 }

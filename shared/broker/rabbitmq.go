@@ -33,7 +33,7 @@ func Connect(user, pass, host, port string) (*amqp.Channel, func() error) {
 		log.Fatal(err)
 	}
 
-	err = ch.ExchangeDeclare(OrderPaidEvent, "fanout", true, false, false, false, nil) /// fanout because events are sent to multiple consumers/services
+	err = ch.ExchangeDeclare(OrderPaidEvent, "fanout", true, false, false, false, nil) // fanout because events are sent to multiple consumers/services
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func createDLQAndDLX(ch *amqp.Channel) error {
 	return err
 }
 
-/// Headers to extract context from AMQP messages
+// Headers to extract context from AMQP messages
 
 type AmqpHeaderCarrier map[string]interface{}
 

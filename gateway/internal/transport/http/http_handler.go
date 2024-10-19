@@ -24,7 +24,6 @@ func NewHttpHandler(gateway gateway.OrdersGateway) *httpHandler {
 }
 
 func (h *httpHandler) RegisterRoutes(mux *http.ServeMux) {
-	/// static file server
 	mux.Handle("/", http.FileServer(http.Dir("public")))
 
 	mux.HandleFunc("POST /api/customers/{customerId}/orders", h.createOrder)
@@ -42,22 +41,22 @@ func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Trace
-	tr := otel.Tracer("http")
-	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
-	defer span.End()
-
 	if err := validateBooks(books); err != nil {
 		shared.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// Trace
+	tr := otel.Tracer("http")
+	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
+	defer span.End()
 
 	o, err := h.gateway.CreateOrder(ctx, &pb.CreateOrderRequest{
 		CustomerId: customerId,
 		Books:      books,
 	})
 
-	/// grpc error handling
+	// grpc error handling
 	errStatus := status.Convert(err)
 
 	if errStatus != nil {
@@ -89,7 +88,7 @@ func (h *httpHandler) getOrder(w http.ResponseWriter, r *http.Request) {
 
 	o, err := h.gateway.GetOrder(ctx, orderId, customerId)
 
-	/// grpc error handling
+	// grpc error handling
 	errStatus := status.Convert(err)
 
 	if errStatus != nil {

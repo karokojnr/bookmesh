@@ -75,7 +75,7 @@ func (s *service) ValidateOrder(ctx context.Context, req *pb.CreateOrderRequest)
 
 	mergedBooks := mergeBooksQuantities(req.Books)
 
-	///  validate with the catalog service
+	//  validate with the catalog service
 	isInCatalog, books, err := s.gateway.CheckIfBookIsInCatalog(ctx, req.CustomerId, mergedBooks)
 
 	if err != nil {

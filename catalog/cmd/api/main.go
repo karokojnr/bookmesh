@@ -33,7 +33,7 @@ var (
 )
 
 func main() {
-	/// Logging
+	// Logging
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 

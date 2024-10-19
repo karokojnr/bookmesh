@@ -45,12 +45,12 @@ func main() {
 
 	zap.ReplaceGlobals(logger)
 
-	/// Tracer
+	// Tracer
 	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
-		logger.Fatal("Failed to set global tracer ", zap.Error(err))
+		logger.Fatal("Failed to set global tracer for orders service ", zap.Error(err))
 	}
 
-	/// Service Discovery Registry
+	// Service Discovery Registry
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {
 		panic(err)
@@ -59,28 +59,28 @@ func main() {
 	ctx := context.Background()
 	instanceId := discovery.GenerateInstanceID(svcName)
 	if err := registry.RegisterService(ctx, instanceId, svcName, grpcAddr); err != nil {
-		logger.Fatal("Failed to register service ", zap.Error(err))
+		logger.Fatal("Failed to register orders service ", zap.Error(err))
 	}
 
 	go func() {
 		for {
 			if err := registry.HealthCheck(instanceId, svcName); err != nil {
-				logger.Fatal("Health check failed ", zap.Error(err))
+				logger.Fatal("Health check failed for orders service", zap.Error(err))
 			}
 			time.Sleep(5 * time.Second)
 		}
 	}()
 	defer registry.UnregisterService(ctx, instanceId, svcName)
-	///
+	//
 
-	/// Broker
+	// Broker
 	ch, close := broker.Connect(amqpUser, amqpPass, amqpHost, amqpPort)
 	defer func() {
 		close()
 		ch.Close()
 	}()
 
-	/// Mongo db connection
+	// Mongo db connection
 	// mongo db conn
 	uri := fmt.Sprintf("mongodb://%s:%s@%s", mongoDbUser, mongoDbPass, mongoDbAddr)
 	mongoClient, err := connectToMongoDb(uri)
@@ -91,22 +91,22 @@ func main() {
 	grpcServer := grpc.NewServer()
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		logger.Fatal("Failed to listen ", zap.Error(err))
+		logger.Fatal("Failed to listen to grpc server", zap.Error(err))
 	}
 	defer conn.Close()
 
-	/// Gateway
+	// Gateway
 	gateway := catalog_gateway.NewGateway(registry)
 
 	store := store.NewStorage(mongoClient)
 	svc := service.NewService(store, gateway)
 
-	/// Use decorator pattern to add middleware to the service
+	// Use decorator pattern to add middleware to the service
 	svcWithTelemetryMiddleware := middlewares.NewTelemetryMiddleware(svc)
 	svcWithLoggingMiddleware := middlewares.NewLoggingMiddleware(svcWithTelemetryMiddleware)
 	transport.NewGrpcHandler(grpcServer, svcWithLoggingMiddleware, ch)
 
-	/// RabbitMQ consumer
+	// RabbitMQ consumer
 	amqpConsumer := consumer.NewConsumer(svcWithLoggingMiddleware)
 	go amqpConsumer.Listen(ch)
 

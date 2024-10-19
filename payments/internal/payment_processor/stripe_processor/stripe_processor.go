@@ -12,13 +12,13 @@ import (
 
 var gatewayAddr = shared.EnvString("GATEWAY_HTTP_ADDR", "http://localhost:8080")
 
-type stripeProcessor struct{}
+type StripeProcessor struct{}
 
-func NewStripe() *stripeProcessor {
-	return &stripeProcessor{}
+func NewStripe() *StripeProcessor {
+	return &StripeProcessor{}
 }
 
-func (s *stripeProcessor) CreatePaymentLink(o *pb.Order) (string, error) {
+func (s *StripeProcessor) CreatePaymentLink(o *pb.Order) (string, error) {
 	log.Printf("Creating payment link for order: %v", o)
 	gatewaySuccessURL := fmt.Sprintf("%s/success.html?customerId=%s&orderId=%s", gatewayAddr, o.CustomerId, o.OrderId)
 	gatewayCancelURL := fmt.Sprintf("%s/cancel.html", gatewayAddr)

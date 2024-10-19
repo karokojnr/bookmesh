@@ -2,8 +2,7 @@
 <html>
 
 <head>
-    <title>Thanks for your order!</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Thank you for your order!</title>
 </head>
 
 <style>
@@ -12,7 +11,7 @@
         font-size: 16px;
         margin: 0;
         padding: 0;
-        background-color: wheat;
+        background-color: white;
         color: #333333;
     }
 
@@ -126,6 +125,7 @@
     // pool the server for the order status
     const poolOrderStatus = async () => {
         const response = await fetch(`/api/customers/${customerId}/orders/${orderId}`);
+
 
         const data = await response.json();
         if (data.Status === 'waiting_payment') {

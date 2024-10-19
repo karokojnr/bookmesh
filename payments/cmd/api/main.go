@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	svcName    = "payments"
+	svcName    = "payment"
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
 	grpcAddr   = shared.EnvString("GRPC_ADDR", "localhost:2001")
 	httpAddr   = shared.EnvString("HTTP_ADDR", "localhost:8081")
@@ -38,12 +38,12 @@ var (
 )
 
 func main() {
-	/// Tracer
+	// Tracer
 	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
 		log.Fatalf("Failed to set global tracer: %v", err)
 	}
 
-	/// Register consul
+	// Register consul
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {
 		panic(err)
@@ -64,23 +64,23 @@ func main() {
 		}
 	}()
 	defer registry.UnregisterService(ctx, instanceId, svcName)
-	///
+	//
 
-	/// Stripe
+	// Stripe
 	stripe.Key = stripeKey
-	stripeProcessor := stripeprocessor.NewStripe()
 
-	/// Broker
+	// Broker
 	ch, close := broker.Connect(amqpUser, amqpPass, amqpHost, amqpPort)
 	defer func() {
 		close()
 		ch.Close()
 	}()
 
-	/// Gateway
+	stripeProcessor := stripeprocessor.NewStripe()
+	// Gateway
 	gateway := gateway.NewGateway(registry)
-	///
-	/// Use decorator pattern to add middleware to the service
+	//
+	// Use decorator pattern to add middleware to the service
 
 	svc := service.NewService(stripeProcessor, gateway)
 	svcWithTelemetryMiddleware := middleware.NewTelemetryMiddleware(svc)
@@ -88,7 +88,7 @@ func main() {
 	amqpConsumer := consumer.NewConsumer(svcWithTelemetryMiddleware)
 	go amqpConsumer.Listen(ch)
 
-	/// Http server
+	// Http server
 	mux := http.NewServeMux()
 	httpServer := transport.NewHttpPaymentHandler(ch)
 	httpServer.RegisterRoutes(mux)
@@ -99,7 +99,7 @@ func main() {
 		}
 	}()
 
-	/// gRPC server
+	// gRPC server
 	grpcServer := grpc.NewServer()
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

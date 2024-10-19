@@ -18,12 +18,12 @@ func ServiceConnection(ctx context.Context, serviceName string, registry Discove
 
 	log.Printf("Discovered %d instances of %s", len(addrs), serviceName)
 
-	/// Randomly select an instance
+	// Randomly select an instance
 	return grpc.NewClient(
 		addrs[rand.Intn(len(addrs))],
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		/// Add OpenTelemetry interceptors
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()), // jaeger
+		// Add OpenTelemetry interceptors
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),   // jaeger
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()), // jaeger
 	)
 }

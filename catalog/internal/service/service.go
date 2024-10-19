@@ -26,7 +26,7 @@ func (s *Service) CheckIfBookIsInCatalog(ctx context.Context, books []*pb.BookWi
 		return false, nil, err
 	}
 
-	/// Check if all books are in the catalog
+	// Check if all books are in the catalog
 	for _, catalogBook := range catalogBooks {
 		for _, book := range books {
 			if catalogBook.BookId == book.BookId && catalogBook.Quantity < book.Quantity {
@@ -35,7 +35,7 @@ func (s *Service) CheckIfBookIsInCatalog(ctx context.Context, books []*pb.BookWi
 		}
 	}
 
-	/// create books with prices from catalog
+	// create books with prices from catalog
 	res := make([]*pb.Book, 0)
 	for _, catalogBook := range catalogBooks {
 		for _, book := range books {

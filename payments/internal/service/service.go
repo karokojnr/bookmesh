@@ -21,13 +21,13 @@ func NewService(processor paymentprocessor.PaymentProcessor, gateway gateway.Ord
 }
 
 func (s *service) CreatePayment(ctx context.Context, o *pb.Order) (string, error) {
-	/// connect to payment process
+	// connect to payment process
 	link, err := s.processor.CreatePaymentLink(o)
 	if err != nil {
 		return "", err
 	}
 
-	/// Update order with the payment link
+	// Update order with the payment link
 	err = s.gateway.UpdateOrderWithPaymentLink(ctx, o.OrderId, link)
 	if err != nil {
 		return "", err

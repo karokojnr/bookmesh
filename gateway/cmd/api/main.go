@@ -16,19 +16,19 @@ import (
 )
 
 var (
+	svcName    = "gateway"
 	httpAddr   = shared.EnvString("HTTP_ADDR", ":8080")
 	consulAddr = shared.EnvString("CONSUL_ADDR", "localhost:8500")
-	svcName    = "gateway"
 	jaegerAddr = shared.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
-	/// Tracer
+	// Tracer
 	if err := tracer.SetGlobalTracer(context.TODO(), svcName, jaegerAddr); err != nil {
-		log.Fatalf("Failed to set global tracer: %v", err)
+		log.Fatalf("failed to set global tracer in gateway: %v", err)
 	}
 
-	/// Register consul
+	// Register consul
 	registry, err := consul.NewConsulDiscoveryRegistry(consulAddr, svcName)
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func main() {
 	ctx := context.Background()
 	instanceId := discovery.GenerateInstanceID(svcName)
 	if err := registry.RegisterService(ctx, instanceId, svcName, httpAddr); err != nil {
-		log.Fatalf("Failed to register service: %v", err)
+		log.Fatalf("failed to register gateway service: %v", err)
 	}
 
 	go func() {
@@ -49,7 +49,6 @@ func main() {
 		}
 	}()
 	defer registry.UnregisterService(ctx, instanceId, svcName)
-	///
 
 	mux := http.NewServeMux()
 
@@ -57,9 +56,9 @@ func main() {
 	h := transport.NewHttpHandler(ordersGateway)
 	h.RegisterRoutes(mux)
 
-	log.Println("Starting http server on", httpAddr)
+	log.Println("gateway starting http server on: ", httpAddr)
 
 	if err := http.ListenAndServe(httpAddr, mux); err != nil {
-		log.Fatal("Failed to start http server", err)
+		log.Fatal("gateway failed to start http server", err)
 	}
 }

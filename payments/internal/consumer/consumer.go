@@ -39,7 +39,7 @@ func (c *consumer) Listen(ch *amqp.Channel) {
 	go func() {
 		for d := range msgs {
 
-			/// Extract the headers from the message
+			// Extract the headers from the message
 			ctx := broker.ExtractAMQPHeader(context.Background(), d.Headers)
 
 			tr := otel.Tracer("amqp")
