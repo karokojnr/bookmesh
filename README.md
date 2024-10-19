@@ -1,6 +1,9 @@
 # BookMesh
 
-A bookstore that follows microservices architecture
+A bookstore that follows microservices architecture.
+
+![alt text](./bookmesh.png)
+
 
 # Tools
 
